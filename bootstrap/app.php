@@ -23,9 +23,16 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-$app->withFacades();
+// Adding the Mail facade
+$app->withFacades(true, [
+    Illuminate\Support\Facades\Mail::class => 'Mail',
+]);
+
+
+//$app->withFacades();
 
 $app->withEloquent();
+
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +68,9 @@ $app->singleton(
 
 $app->configure('app');
 
+$app->configure('mail');
+
+$app->configure('database');
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
@@ -95,6 +105,10 @@ $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
 $app->register(App\Providers\AppServiceProvider::class);
 $app->register(App\Providers\AuthServiceProvider::class);
 $app->register(App\Providers\EventServiceProvider::class);
+//Registering the mail service provider here
+$app->register(Illuminate\Mail\MailServiceProvider::class);
+$app->register(App\Providers\CloudinaryServiceProvider::class);
+
 
 /*
 |--------------------------------------------------------------------------
