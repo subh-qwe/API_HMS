@@ -17,5 +17,15 @@ $router->post('/auth/login', 'LoginController@login');
 
 
 $router->get('/', function () use ($router) {
+    echo('HMS API is Running 🐱‍🏍🐱‍🏍🐱‍🏍');
+});
+
+$router->get('/version', function () use ($router) {
+   
     return $router->app->version();
 });
+
+//USER MANAGEMENT 
+// 1 Create user or Signup 
+ $router->post('website/user/signup', 'AuthController@signup');
+ $router->post('website/user/verifyotp','AuthController@verifyOtp');
