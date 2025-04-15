@@ -29,6 +29,16 @@ $router->get('/version', function () use ($router) {
 // 1 Create user or Signup 
  $router->post('website/user/signup', 'AuthController@signup');
  $router->post('website/user/verifyotp','AuthController@verifyOtp');
+ $router->post('/website/user/login','AuthController@login');
+
+
+ // use cases of protected routes
+ //$router->group(['middleware' => 'jwt.auth'], function () use ($router) {
+    //         $router->post('logout', 'AuthController@logout');
+    //         $router->post('refresh', 'AuthController@refresh');
+    //         $router->get('me', 'AuthController@me');
+    //         // Your other protected routes...
+    //     });
 
 // Property Management
 // 1 Create Property

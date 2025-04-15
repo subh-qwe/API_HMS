@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Validator;
 use App\Mail\VerificationEmail;
 use App\Mail\WelcomeEmail;
 use Carbon\Carbon;
-use DB;
 use App\Services\CloudinaryService;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -22,6 +22,7 @@ class AuthController extends Controller
         $this->cloudinary = $cloudinary;
     }
 
+    // Public function to register the user
     public function signup(Request $request)
 {
     // Validate request data
@@ -112,7 +113,7 @@ class AuthController extends Controller
     }
 }
     
-    // Verify OTP
+     // This function handles user registration and send the verification email
     public function verifyOtp(Request $request){
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
@@ -151,6 +152,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Email verified successfully! You can now log in.']);
     }
     
+    // This function is use to resend the OTP to the user email
     public function resendOtp(Request $request){
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id'
@@ -191,4 +193,74 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    // Public Function to login the user
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'email|required',
+            'password' => 'required'
+        ], [
+            'email.email' => 'Enter a valid Email',
+            'email.required' => 'Email is required field',
+            'password.required' => 'Password is required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => "Invalid Credentials",
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Get credentials for attempt
+        $credentials = $request->only(['email', 'password']);
+
+        // Attempt to authenticate
+        if (!$token = Auth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid Credentials'
+            ], 401);
+        }
+
+        // Return token if authentication successful
+        return $this->respondWithToken($token);
+    }
+
+    /**
+     * Get the token array structure.
+     */
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User Login Successfully!',
+            'token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => Auth::factory()->getTTL() * 60 // in seconds
+        ], 200);
+    }
+
+    /**
+     * Refresh a token.
+     */
+    public function refresh()
+    {
+        return $this->respondWithToken(Auth::refresh());
+    }
+
+    
+    // Public function to logout the user 
+    public function logout()
+    {
+        Auth::logout();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Successfully logged out'
+        ], 200);
+    }
+   
 }
