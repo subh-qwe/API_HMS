@@ -228,6 +228,8 @@ class PropertyController extends Controller
     }
 
     function getPropertybyId($id){
+
+        $changes =0;
        
         $property = Properties::with('images')->find($id);
 
