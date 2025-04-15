@@ -130,10 +130,11 @@ class AuthController extends Controller
         if ($user->otp != $request->otp) {
             return response()->json(['error' => 'Invalid OTP'], 400);
         }
-        
+        // here i am using the comment 
         $user->otp = null; 
         $user->email_verified_at = \Carbon\Carbon::now(); 
         $user->save();
+        $rrt=0; // this is og no use 
         
         // Send welcome email
         $mailData = [
