@@ -17,4 +17,12 @@ class Amenity extends Model
         'icon',
     ];
 
+
+    // Many-to-many relationship with Property
+    public function properties()
+    {
+        return $this->belongsToMany(Properties::class, 'property_amenity', 'amenity_id', 'property_id');
+    }
+
+
 }

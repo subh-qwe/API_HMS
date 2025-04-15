@@ -29,7 +29,7 @@ $app->withFacades(true, [
 ]);
 
 
-//$app->withFacades();
+$app->withFacades();
 
 $app->withEloquent();
 
