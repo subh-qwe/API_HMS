@@ -37,4 +37,14 @@ class Properties extends Model
     {
         return $this->belongsToMany(Amenity::class, 'property_amenity', 'property_id', 'amenity_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'property_id', 'id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'property_id', 'id');
+    }
 }

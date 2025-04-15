@@ -61,6 +61,7 @@ class PropertyController extends Controller
         [
             'host_id.required' => 'The host ID is mandatory.',
             'host_id.integer' => 'The host ID must be a valid number.',
+            'host_id.exists' => 'The host ID does not exist.',
             'title.required' => 'Please provide a title for the property.',
             'title.string' => 'The title must be text.',
             'title.max' => 'The title cannot exceed 100 characters.',
@@ -168,15 +169,19 @@ class PropertyController extends Controller
                 if ($request->has('images')) {
                     foreach ($validated['images'] as $imageData) {
                         
-                            dd($imageData);
+                            // dd($imageData);
                             $image = $imageData['image'];
                             $result = $this->cloudinaryService->uploadFile($image, 'property_images');
+
+                           
 
                             if (!isset($result['secure_url'])) {
                                 throw new \Exception('Image upload failed');
                             }
 
                             $secureUrl = $result['secure_url'];
+
+                        //using public_id for Deleting images from Cloudinary, Updating or transforming assets, Debugging and auditing.
                             $publicId = $result['public_id'] ?? null;
                             $uploadedPublicIds[] = $publicId;
 
@@ -209,10 +214,27 @@ class PropertyController extends Controller
             \Log::error('Property creation failed: ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'message' => 'Failed to create property',
-                'error' => 'Database error'. e->getMessage()
+                'error' => 'Database error'. $e->getMessage()
             ], 500);
         }
     }
 
+    function listProperties(){
+        $properties = Properties::with('images')->get();
+        return response()->json([
+            'message' => 'Properties retrieved successfully',
+            'data' => $properties
+        ], 200);
+    }
+
+    function getPropertybyId($id){
+       
+        $property = Properties::with('images')->find($id);
+
+        return response()->json([
+            'message' => 'Property retrieved successfully',
+            'data' => $property
+        ], 200);
+    }
 
 }
