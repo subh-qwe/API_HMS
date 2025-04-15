@@ -29,3 +29,7 @@ $router->get('/version', function () use ($router) {
 // 1 Create user or Signup 
  $router->post('website/user/signup', 'AuthController@signup');
  $router->post('website/user/verifyotp','AuthController@verifyOtp');
+
+// Property Management
+// 1 Create Property
+$router->post('user/property/addnewproperty', 'PropertyController@store');

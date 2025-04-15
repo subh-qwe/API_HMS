@@ -21,12 +21,13 @@ class AuthController extends Controller
     {
         $this->cloudinary = $cloudinary;
     }
+
     public function signup(Request $request)
 {
     // Validate request data
     $validator = Validator::make($request->all(), [
         'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:user_registrations,email',
+        'email' => 'required|email|unique:users,email',
         'password' => 'required|min:6',
         'phone_number' => 'required|string',
         'profile_image' => 'nullable|image|max:2048',
