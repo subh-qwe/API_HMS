@@ -7,10 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 class propertyReview extends Model
 {
    protected $table = 'reviews';
-   protected $timestamps = true;
+   public $timestamps = true;
 
    protected $fillable = [
-       'rating',
-       'comment',
+        'booking_id',
+        'property_id',
+        'guest_id',
+        'rating',
+        'comment',
    ];
+
+   public function booking(){
+     return $this->belongsTo(bookings::class,'booking_id','id');
+   }
+
+   public function property(){
+     return $this->belongsTo(Properties::class,'property_id','id');
+   }
+
+   public function guest(){
+     return $this->belongsTo(UserRegistration::class,'guest_id','id');
+   }
 }

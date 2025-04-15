@@ -2,6 +2,12 @@
 
 /** @var \Laravel\Lumen\Routing\Router $router */
 
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\AuthController;
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -31,5 +37,9 @@ $router->get('/version', function () use ($router) {
  $router->post('website/user/verifyotp','AuthController@verifyOtp');
 
 // Property Management
-// 1 Create Property
+
 $router->post('user/property/addnewproperty', 'PropertyController@store');
+$router->get('property/listproperties', 'PropertyController@listProperties');
+$router->get('property/listproperty/{id}', 'PropertyController@getPropertybyId');
+
+// Property Review Management
