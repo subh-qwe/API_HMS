@@ -40,6 +40,6 @@ $router->get('/version', function () use ($router) {
 
 $router->post('user/property/addnewproperty', 'PropertyController@store');
 $router->get('property/listproperties', 'PropertyController@listProperties');
-$router->get('property/listproperty/{id}', 'PropertyController@getPropertybyId');
+$router->get('property/listpropertybyid/{id}', 'PropertyController@getPropertybyId');
 
 // Property Review Management
