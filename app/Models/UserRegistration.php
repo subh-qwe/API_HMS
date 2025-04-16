@@ -50,6 +50,10 @@ class UserRegistration extends Model implements AuthenticatableContract, Authori
             return app('hash')->check($password, $user->password);
         }
 
+    public function bookings(){
+        return $this->hasMany(bookings::class,'guest_id','id');
+    }
+    
     public function reviews(){
         return $this->hasMany(propertyReview::class,'guest_id','id');
     }
