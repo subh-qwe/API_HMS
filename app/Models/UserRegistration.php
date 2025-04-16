@@ -35,18 +35,23 @@ class UserRegistration extends Model implements AuthenticatableContract, Authori
 
    public $timestamps = true;
 
-   public function findUserByEmail($email){
-      return $this->where('email', $email)->first();
-   }
-   public function validPass($email, $password)
-{
-    $user = $this->where('email', $email)->first();
-    $user = $this->where('email', $email)->first();
-    if (!$user) {
-        return false;
+    public function findUserByEmail($email)
+        {
+            return $this->where('email', $email)->first();
+        }
+
+    public function validPass($email, $password)
+        {
+            $user = $this->where('email', $email)->first();
+            if (!$user) {
+                return false;
+            }
+            
+            return app('hash')->check($password, $user->password);
+        }
+
+    public function reviews(){
+        return $this->hasMany(propertyReview::class,'guest_id','id');
     }
-    
-    return app('hash')->check($password, $user->password);
-}
     
 }

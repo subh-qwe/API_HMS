@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class bookings extends Model
 {
     protected $table = 'bookings';
-    protected $timestamps = true;
+    public $timestamps = true;
 
 
     protected $fillable = [
@@ -19,4 +19,8 @@ class bookings extends Model
         'total_price',
         'status',
     ];
+
+    public function reviews(){
+        return $this->hasMany(propertyReview::class, 'booking_id','id')
+    }
 }

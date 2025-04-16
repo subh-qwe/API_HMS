@@ -24,5 +24,3 @@ EXPOSE 3000
 # Start PHP-FPM and Nginx
 CMD php-fpm -D && nginx -g "daemon off;"
 
-explin me after this
-what will the extension of this file 
