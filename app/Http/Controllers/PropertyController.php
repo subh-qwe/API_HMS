@@ -220,7 +220,7 @@ class PropertyController extends Controller
     }
 
     function listProperties(){
-        $properties = Properties::with('images')->get();
+        $properties = Properties::with('images', 'amenities')->get();
         return response()->json([
             'message' => 'Properties retrieved successfully',
             'data' => $properties
@@ -228,10 +228,8 @@ class PropertyController extends Controller
     }
 
     function getPropertybyId($id){
-
-        $changes =0;
        
-        $property = Properties::with('images')->find($id);
+        $property = Properties::with('images', 'amenities')->find($id);
 
         return response()->json([
             'message' => 'Property retrieved successfully',
