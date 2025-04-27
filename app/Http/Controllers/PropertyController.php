@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Properties;
 use App\Services\CloudinaryService;
 use App\Models\PropertyImages;
-
 use App\Models\Amenity;
 
 class PropertyController extends Controller
@@ -90,11 +89,11 @@ class PropertyController extends Controller
             'bedrooms.min' => 'The number of bedrooms cannot be negative.',
 
             'bathrooms.required' => 'Please specify the number of bathrooms.',
-            'bathrooms.integer' => 'The number of bathrooms must be a number without decimals.',
+            'bathrooms.integer' => 'The number of bathrooms must be numeric .',
             'bathrooms.min' => 'The number of bathrooms cannot be negative.',
 
             'max_guests.required' => 'Please specify the maximum number of guests.',
-            'max_guests.integer' => 'The maximum number of guests must be a number without decimals.',
+            'max_guests.integer' => 'The maximum number of guests must be a positive whole number.',
             'max_guests.min' => 'The maximum number of guests must be at least 1.',
 
             'price_per_night.required' => 'Please provide the price per night.',
@@ -153,38 +152,33 @@ class PropertyController extends Controller
                     'bathrooms' => $validated['bathrooms'],
                     'max_guests' => $validated['max_guests'],
                     'price_per_night' => $validated['price_per_night'],
-                    'cleaning_fee' => $validated['cleaning_fee'] ?? null,
-                    'service_fee' => $validated['service_fee'] ?? null,
+                    'cleaning_fee' => $validated['cleaning_fee'] ?? 0,
+                    'service_fee' => $validated['service_fee'] ?? 0,
                     'status' => $validated['status'],
                 ]);
 
-                 // Handle amenities
-                    if ($request->has('amenities')) 
-                    {
-                        $property->amenities()->sync($validated['amenities']);
-                    }
-
-                               
+                
+                
                 // Handle images
                 if ($request->has('images')) {
                     foreach ($validated['images'] as $imageData) {
                         
-                            // dd($imageData);
-                            $image = $imageData['image'];
-                            $result = $this->cloudinaryService->uploadFile($image, 'property_images');
-
-                           
-
-                            if (!isset($result['secure_url'])) {
-                                throw new \Exception('Image upload failed');
-                            }
-
+                        // dd($imageData);
+                        $image = $imageData['image'];
+                        $result = $this->cloudinaryService->uploadFile($image, 'property_images');
+                        
+                        
+                        
+                        // if (!isset($result['secure_url'])) {
+                            //     throw new \Exception('Image upload failed');
+                            // }
+                            
                             $secureUrl = $result['secure_url'];
-
-                        //using public_id for Deleting images from Cloudinary, Updating or transforming assets, Debugging and auditing.
+                            
+                            //using public_id for Deleting images from Cloudinary, Updating or transforming assets, Debugging and auditing.
                             $publicId = $result['public_id'] ?? null;
                             $uploadedPublicIds[] = $publicId;
-
+                            
                             $property->images()->create([
                                 'image_path' => $secureUrl,
                                 'public_id' => $publicId,
@@ -193,6 +187,12 @@ class PropertyController extends Controller
                             ]);
                         }
                     }
+                    
+                    // Handle amenities
+                   if ($request->has('amenities')) 
+                   {
+                       $property->amenities()->sync($validated['amenities']);
+                   }
 
                 // Commit the transaction
                 DB::commit();
@@ -211,6 +211,7 @@ class PropertyController extends Controller
                     $this->cloudinaryService->deleteFile($publicId);
                 }
             }
+
             \Log::error('Property creation failed: ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
                 'message' => 'Failed to create property',
@@ -219,7 +220,7 @@ class PropertyController extends Controller
         }
     }
 
-    function listProperties(){
+    public function listProperties(){
         $properties = Properties::with('images', 'amenities')->get();
         return response()->json([
             'message' => 'Properties retrieved successfully',
@@ -227,14 +228,161 @@ class PropertyController extends Controller
         ], 200);
     }
 
-    function getPropertybyId($id){
+    public function getPropertybyId($id){
        
-        $property = Properties::with('images', 'amenities')->find($id);
-
-        return response()->json([
-            'message' => 'Property retrieved successfully',
-            'data' => $property
-        ], 200);
+            $property = Properties::with('images', 'amenities')->find($id);
+           
+            if(!$property){
+                return response()->json([
+                    'error' => 'Property not found for the given ID',
+                ], 404);
+            }
+    
+            // Return success response
+            return response()->json([
+                'message' => 'Property retrieved successfully',
+                'data' => $property
+            ], 200);
+        
     }
 
+    public function updateProperty(Request $request, $id)
+    {
+        $propertyId = Properties::with('images', 'amenities')->find($id);
+
+        // dd($propertyId);
+
+        if(!$propertyId){
+            return response()->json([
+                "error" => "Property not found ",
+            ], 404);
+        }
+
+        $credentials = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'property_type' => 'required|in:apartment,house,villa,condo,cabin', 
+            'address' => 'required|string|max:250',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'zip_code' => 'required|string|max:20',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'bedrooms' => 'required|integer|min:1',
+            'bathrooms' => 'required|integer|min:1',
+            'max_guests' => 'required|integer|min:1',
+            'price_per_night' => 'required|numeric|min:0',
+            'cleaning_fee' => 'nullable|numeric|min:0',
+            'service_fee' => 'nullable|numeric|min:0',
+            'status' => 'required|in:available,unavailable,maintenance',
+
+            'images' => 'nullable|array|min:1',
+            'images.*.image' => 'required|file|image|mimes:jpeg,jpg,png,gif|max:2048',
+            'images.*.is_featured' => 'nullable|boolean',
+            'images.*.caption' => 'nullable|string|max:250',
+
+            'amenities' => 'nullable|array',
+            'amenities.*' => 'exists:amenities,id',  
+      
+        ]);
+
+        if ($credentials->fails()) {
+            return response()->json([
+                'errors' => $credentials->errors(),
+            ], 422); 
+        }
+
+        try{
+
+            $request = $credentials->validated();
+
+            $property = Properties::update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'property_type' => $request->property_type,
+                'address' => $request->address,
+                'city' => $request->city,
+                'state' => $request->state,
+                'zip_code' => $request->zip_code,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'bedrooms' => $request->bedrooms,
+                'bathrooms' => $request->bathrooms,
+                'max_guests' => $request->max_guests,
+                'price_per_night' => $request->price_per_night,
+                'cleaning_fee' => $request->cleaning_fee,
+                'service_fee' => $request->service_fee,
+                'status' => $request->status,
+            ]);
+
+             // Handle images if provided
+                if ($request->has('images')) {
+                    foreach ($validated['images'] as $imageData) {
+                        // If an image ID is provided, we are updating an existing image
+                        if (isset($imageData['id'])) {
+                            $existingImage = $property->images()->find($imageData['id']);
+
+                            if ($existingImage) {
+                                // Delete old image from Cloudinary
+                                $this->cloudinaryService->deleteFile($existingImage->public_id);
+
+                                // Upload the new image
+                                $imageFile = $imageData['image'];
+                                $result = $this->cloudinaryService->uploadFile($imageFile, 'property_images');
+
+                                // Update the image record in the database
+                                $existingImage->update([
+                                    'image_path' => $result['secure_url'],
+                                    'public_id' => $result['public_id'],
+                                    'caption' => $imageData['caption'] ?? $existingImage->caption,
+                                    'is_featured' => $imageData['is_featured'] ?? $existingImage->is_featured,
+                                ]);
+                            }
+                        } else {
+                            // If no ID is provided, create a new image record
+                            $imageFile = $imageData['image'];
+                            $result = $this->cloudinaryService->uploadFile($imageFile, 'property_images');
+
+                            $property->images()->create([
+                                'image_path' => $result['secure_url'],
+                                'public_id' => $result['public_id'],
+                                'caption' => $imageData['caption'] ?? null,
+                                'is_featured' => $imageData['is_featured'] ?? false,
+                            ]);
+                        }
+                    }
+                }
+
+                 // Sync amenities: Add new amenities, remove old ones not in the list
+                    if ($request->has('amenities')) {
+                        // First, sync the amenities to ensure proper association
+                        $property->amenities()->sync($validated['amenities']);
+
+                        // Now, let's update any existing amenities. We assume that the `is_featured` status or other properties might need updating
+                        foreach ($property->amenities as $amenity) {
+                            if (in_array($amenity->id, $validated['amenities'])) {
+                                // Assuming you're tracking a custom field like 'is_featured' for amenities
+                                $amenity->update([
+                                    'is_featured' => $request->has('is_featured') ? $request->is_featured : $amenity->is_featured,
+                                ]);
+                            }
+                        }
+                    }
+        } 
+        
+        catch (\Exception $e) {
+            // Log the error
+            Log::error('Failed to update property', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return response()->json([
+                'error' => 'An error occurred while updating the property.',
+                'details' => $e->getMessage(), // Optional: Hide in production
+            ], 500);
+        }
+
+       
+    }
 }
