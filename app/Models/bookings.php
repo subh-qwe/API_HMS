@@ -16,7 +16,6 @@ class bookings extends Model
         'check_in_date',
         'check_out_date',
         'guests_count',
-        
         'total_price',
         'status',
     ];
