@@ -71,6 +71,10 @@ $app->configure('app');
 $app->configure('mail');
 
 $app->configure('database');
+
+$app->configure('auth');
+
+$app->configure('jwt');
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
@@ -89,6 +93,10 @@ $app->middleware([
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
 ]);
+$app->routeMiddleware([
+        'auth' => App\Http\Middleware\Authenticate::class,
+        'jwt.auth' => App\Http\Middleware\JwtMiddleware::class,
+     ]);
 
 /*
 |--------------------------------------------------------------------------
@@ -108,6 +116,12 @@ $app->register(App\Providers\EventServiceProvider::class);
 //Registering the mail service provider here
 $app->register(Illuminate\Mail\MailServiceProvider::class);
 $app->register(App\Providers\CloudinaryServiceProvider::class);
+
+// Regestring the JWT service provider
+$app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+$app->alias('JWTAuth', Tymon\JWTAuth\Facades\JWTAuth::class);
+$app->alias('JWTFactory', Tymon\JWTAuth\Facades\JWTFactory::class);
+$app->register(App\Providers\AuthServiceProvider::class);
 
 
 /*

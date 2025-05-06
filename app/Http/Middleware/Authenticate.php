@@ -35,10 +35,24 @@ class Authenticate
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        if ($this->auth->guard($guard)->guest()) {
-            return response('Unauthorized.', 401);
+        if (!$request->bearerToken()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Authentication token not provided',
+                'code' => 401
+            ], 401);
         }
-
+    
+        // Check if user is authenticated
+        if ($this->auth->guard($guard)->guest()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized access. Invalid or expired token',
+                'code' => 401
+            ], 401);
+        }
+    
         return $next($request);
+        
     }
 }

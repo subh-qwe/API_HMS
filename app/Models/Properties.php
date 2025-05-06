@@ -40,11 +40,11 @@ class Properties extends Model
 
     public function bookings()
     {
-        return $this->hasMany(Booking::class, 'property_id', 'id');
+        return $this->hasMany(bookings::class, 'property_id', 'id');
     }
 
     public function reviews()
     {
-        return $this->hasMany(Review::class, 'property_id', 'id');
+        return $this->hasMany(propertyReview::class, 'property_id', 'id');
     }
 }
