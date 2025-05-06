@@ -42,6 +42,17 @@ $router->get('/version', function () use ($router) {
 
 
 
+
+// Property Management
+
+$router->group(['prefix'=> 'property'], function () use ($router){
+    $router->get('getproperties', 'PropertyController@listProperties');
+    $router->get('getpropertybyid/{id}', 'PropertyController@getPropertybyId');
+    $router->post('addnewproperty', 'PropertyController@store');
+    $router->post('updateproperty/{id}', 'PropertyController@updateProperty');
+});
+
+
 // 2 Property Management
 $router->post('user/property/addnewproperty', 'PropertyController@store');
 $router->get('property/listproperties', 'PropertyController@listProperties');
@@ -55,6 +66,7 @@ $router->post('user/property/bookproperty', ['middleware' => 'auth', 'uses' => '
 
 
 // Property Review Management
+
 
 
 
