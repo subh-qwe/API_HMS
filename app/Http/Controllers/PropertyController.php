@@ -390,10 +390,9 @@ class PropertyController extends Controller
     }
 
     public function deleteProperty($id){
+        
         try{
             $property = Properties::with('images', 'amenities')->find($id);
-
-            // dd($property->amenities);
 
             if(!$property)
             {
@@ -411,7 +410,7 @@ class PropertyController extends Controller
             //Delete image records from the database
             $property->images()->delete();
 
-            //Delete property record from the database
+            //Delete property id and all related records of the property_amenity 
             $property->delete();
 
         return response()->json([

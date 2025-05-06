@@ -54,12 +54,6 @@ $router->group(['prefix'=> 'property'], function () use ($router){
 });
 
 
-// 2 Property Management
-$router->post('user/property/addnewproperty', 'PropertyController@store');
-$router->get('property/listproperties', 'PropertyController@listProperties');
-$router->get('property/listpropertybyid/{id}', 'PropertyController@getPropertybyId');
-//*****************************Pending API Edit Property information*******************
-
 
 // 3 Property Booking Management
 $router->post('user/property/bookproperty', ['middleware' => 'auth', 'uses' => 'BookingController@bookProperty']);
