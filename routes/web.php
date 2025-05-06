@@ -45,6 +45,7 @@ $router->group(['prefix'=> 'property'], function () use ($router){
     $router->get('getpropertybyid/{id}', 'PropertyController@getPropertybyId');
     $router->post('addnewproperty', 'PropertyController@store');
     $router->post('updateproperty/{id}', 'PropertyController@updateProperty');
+    $router->post('deleteproperty/{id}', 'PropertyController@deleteProperty');
 });
 
 
