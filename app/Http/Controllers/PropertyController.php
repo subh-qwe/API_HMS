@@ -219,22 +219,173 @@ class PropertyController extends Controller
         }
     }
 
-    function listProperties(){
+    function listProperties()
+    {
+        try
+        {
         $properties = Properties::with('images', 'amenities')->get();
         return response()->json([
             'message' => 'Properties retrieved successfully',
             'data' => $properties
         ], 200);
+        }
+        catch(\Exception $e){
+            \Log::error('Failed to retrieve properties: ' . $e->getMessage());
+
+            return response()->json([
+                'message'=> 'Failed to retrieve Properties',
+                'error' => $e->getMessage()
+            ], 500);
+
+        }
     }
 
     function getPropertybyId($id){
        
         $property = Properties::with('images', 'amenities')->find($id);
 
+        if(!$property){
+            return response()->json([
+                'message' => 'Property not found',
+            ], 404);
+        }
+
         return response()->json([
             'message' => 'Property retrieved successfully',
-            'data' => $property
+            'data' => $property->load('images', 'amenities')
         ], 200);
     }
 
+    public function updateProperty(Request $request, $id)
+    {
+        
+        //Validating the Input request
+        $validator = Validator::make($request->all(), [
+            'host_id' => 'required|exists:users,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'property_type' => 'required|string',
+            'address' => 'required|string',
+            'city' => 'required|string',
+            'state' => 'required|string',
+            'zip_code' => 'required|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'bedrooms' => 'required|integer',
+            'bathrooms' => 'required|integer',
+            'max_guests' => 'required|integer',
+            'price_per_night' => 'required|numeric',
+            'cleaning_fee' => 'nullable|numeric',
+            'service_fee' => 'nullable|numeric',
+            'status' => 'required|string',
+            'amenities' => 'nullable|array',
+            'images' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // Start a database transaction
+            DB::beginTransaction();
+
+            // Find the property by ID with images and amenities
+            $property = Properties::with('images', 'amenities')->find($id);
+
+            if (!$property) {
+                return response()->json([
+                    'message' => 'Property not found',
+                ], 404);
+            }
+
+            // Retrieve validated data
+            $validated = $validator->validated();
+
+            // Update the property details
+            $property->update([
+                'host_id' => $validated['host_id'],
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'property_type' => $validated['property_type'],
+                'address' => $validated['address'],
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                'zip_code' => $validated['zip_code'],
+                'latitude' => $validated['latitude'] ?? 0,
+                'longitude' => $validated['longitude'] ?? 0,
+                'bedrooms' => $validated['bedrooms'],
+                'bathrooms' => $validated['bathrooms'],
+                'max_guests' => $validated['max_guests'],
+                'price_per_night' => $validated['price_per_night'],
+                'cleaning_fee' => $validated['cleaning_fee'] ?? null,
+                'service_fee' => $validated['service_fee'] ?? null,
+                'status' => $validated['status'],
+            ]);
+
+            // Handle amenities update
+            if (isset($validated['amenities'])) {
+                $property->amenities()->sync($validated['amenities']);
+            }
+
+            // Handle images update (delete old images and upload new ones)
+            if (isset($validated['images'])) {
+                
+                // Delete old images from Cloudinary and the database
+                foreach ($property->images as $existingImage) {
+                    
+                    // Delete the image from Cloudinary using its public_id
+                    $this->cloudinaryService->deleteFile($existingImage->public_id);
+                    
+                    // Delete the image record from the property_images table
+                    $existingImage->delete();
+                }
+
+                // Upload new images to Cloudinary and save in the database
+                foreach ($validated['images'] as $imageData) {
+                    
+                    // Upload the image to Cloudinary
+                    $image = $imageData['image'];
+                    $result = $this->cloudinaryService->uploadFile($image, 'property_images');
+
+                    if (!isset($result['secure_url'])) {
+                        throw new \Exception('Image upload failed');
+                    }
+
+                    // Get the secure URL and public ID
+                    $secureUrl = $result['secure_url'];
+                    $publicId = $result['public_id'] ?? null;
+
+                    // Step 3: Save the new image to the database, linking it with the property_id
+                    $property->images()->create([
+                        'image_path' => $secureUrl,
+                        'public_id' => $publicId,
+                        'caption' => $imageData['caption'] ?? null,
+                        'is_featured' => $imageData['is_featured'] ?? false,
+                    ]);
+                }
+            }
+
+            // Commit the transaction
+            DB::commit();
+
+            // Return the updated property with images and amenities
+            return response()->json([
+                'message' => 'Property updated successfully',
+                'data' => $property->load('images', 'amenities')
+            ], 200);
+
+        } 
+        catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Property update failed: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json([
+                'message' => 'Failed to update property',
+                'error' => 'Database error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

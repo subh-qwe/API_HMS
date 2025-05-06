@@ -36,10 +36,16 @@ $router->get('/version', function () use ($router) {
  $router->post('website/user/signup', 'AuthController@signup');
  $router->post('website/user/verifyotp','AuthController@verifyOtp');
 
+
+
 // Property Management
 
-$router->post('user/property/addnewproperty', 'PropertyController@store');
-$router->get('property/listproperties', 'PropertyController@listProperties');
-$router->get('property/listpropertybyid/{id}', 'PropertyController@getPropertybyId');
+$router->group(['prefix'=> 'property'], function () use ($router){
+    $router->get('getproperties', 'PropertyController@listProperties');
+    $router->get('getpropertybyid/{id}', 'PropertyController@getPropertybyId');
+    $router->post('addnewproperty', 'PropertyController@store');
+    $router->post('updateproperty/{id}', 'PropertyController@updateProperty');
+});
+
 
 // Property Review Management
