@@ -31,8 +31,8 @@ RUN composer install --ignore-platform-reqs --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 RUN chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Expose port 4998
-EXPOSE 4998
+# Expose port (use PORT env variable for Railway)
+ENV PORT=8080
 
-# Start PHP built-in server for Lumen
-CMD php -S 0.0.0.0:4998 -t public
+# Start PHP built-in server for Lumen using PORT environment variable
+CMD php -S 0.0.0.0:${PORT} -t public
