@@ -2,6 +2,8 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+require_once __DIR__ . '/../app/helpers.php';
+
 (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
     dirname(__DIR__)
 ))->bootstrap();
@@ -55,6 +57,13 @@ $app->singleton(
     App\Console\Kernel::class
 );
 
+
+$app->singleton(
+    Illuminate\Contracts\Console\Kernel::class,
+    App\Console\Kernel::class
+);
+
+
 /*
 |--------------------------------------------------------------------------
 | Register Config Files
@@ -75,6 +84,7 @@ $app->configure('database');
 $app->configure('auth');
 
 $app->configure('jwt');
+
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
@@ -86,8 +96,9 @@ $app->configure('jwt');
 |
 */
 
+
 $app->middleware([
-    App\Http\Middleware\ExampleMiddleware::class
+    App\Http\Middleware\CorsMiddleware::class
 ]);
 
 $app->routeMiddleware([
@@ -123,6 +134,21 @@ $app->alias('JWTAuth', Tymon\JWTAuth\Facades\JWTAuth::class);
 $app->alias('JWTFactory', Tymon\JWTAuth\Facades\JWTFactory::class);
 $app->register(App\Providers\AuthServiceProvider::class);
 
+
+// Register DomPDF Service Provider
+$app->register(\Barryvdh\DomPDF\ServiceProvider::class);
+
+// Create an alias for the PDF facade
+$app->configure('dompdf');
+class_alias(\Barryvdh\DomPDF\Facade\Pdf::class, 'PDF');
+
+// Make sure storage directory is accessible
+$app->useStoragePath(env('STORAGE_PATH', base_path() . '/storage'));
+
+// $app->register(\Illuminate\Mail\MailServiceProvider::class);
+
+// Configure mail settings
+$app->configure('services');
 
 /*
 |--------------------------------------------------------------------------
