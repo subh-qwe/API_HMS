@@ -55,7 +55,7 @@ class UserRegistration extends Model implements AuthenticatableContract, Authori
     }
     
     public function reviews(){
-        return $this->hasMany(propertyReview::class,'guest_id','id');
+        return $this->hasMany(PropertyReview::class,'guest_id','id');
     }
     
 }
