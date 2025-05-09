@@ -38,7 +38,7 @@ $router->get('/version', function () use ($router) {
  $router->post('website/user/signup', 'AuthController@signup');
  $router->post('website/user/verifyotp','AuthController@verifyOtp');
  $router->post('/website/user/login','AuthController@login');
- // ************************** Pending API Edit user information*******************
+ 
 
 
 
@@ -57,6 +57,7 @@ $router->group(['prefix'=> 'property'], function () use ($router){
 
 // 3 Property Booking Management
 $router->post('user/property/bookproperty', ['middleware' => 'auth', 'uses' => 'BookingController@bookProperty']);
+$router->post('user/property/cancelbooking', ['middleware' => 'auth', 'uses' => 'BookingController@cancelBooking']);
 
 
 
