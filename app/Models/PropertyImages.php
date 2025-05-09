@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class propertyImages extends Model
+class PropertyImages extends Model
 {
     protected $table = 'property_images';
     public $timestamps = true;

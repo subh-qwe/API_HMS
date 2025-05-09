@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class propertyAvailability extends Model
+class PropertyAvailability extends Model
 {
     protected $table = 'availability';
     protected $timestamps = true;

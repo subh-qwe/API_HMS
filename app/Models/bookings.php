@@ -29,7 +29,7 @@ class bookings extends Model
     }
 
     public function reviews(){
-        return $this->hasMany(propertyReview::class, 'booking_id','id');
+        return $this->hasMany(PropertyReview::class, 'booking_id','id');
     }
 
 

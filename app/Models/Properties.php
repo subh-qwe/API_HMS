@@ -45,6 +45,6 @@ class Properties extends Model
 
     public function reviews()
     {
-        return $this->hasMany(propertyReview::class, 'property_id', 'id');
+        return $this->hasMany(PropertyReview::class, 'property_id', 'id');
     }
 }
