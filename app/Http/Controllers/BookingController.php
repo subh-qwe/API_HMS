@@ -101,7 +101,7 @@ class BookingController extends Controller
                 $booking->load('property', 'guest');
                 
                 // Create invoice record in the database
-                $invoice_number = 'INV-' . date('Y') . '-' . $booking->id;
+                $invoice_number = 'INV' . date('Y') . '-' . $booking->id;
                 $base_price = $days * $property->price_per_night;
                 
                 invoice::create([
@@ -184,7 +184,7 @@ class BookingController extends Controller
             'property' => $booking->property,
             'guest' => $booking->guest,
             'invoice' => $invoice,
-            'invoice_number' => 'INV-' . date('Y') . rand(0, 99) . str_pad($booking->id, 4, '0', STR_PAD_LEFT),
+            'invoice_number' => 'INV' . date('Y') . rand(0, 999) . str_pad($booking->id, 4, '0', STR_PAD_LEFT),
             'invoice_date' => date('Y-m-d'),
             'days' => (new \DateTime($booking->check_in_date))->diff(new \DateTime($booking->check_out_date))->days,
         ];
@@ -234,31 +234,12 @@ class BookingController extends Controller
                 // Update related invoice status
                 $invoice = invoice::where('booking_id', $booking->id)->first();
                 if ($invoice) {
-                    $invoice->status = 'cancelled';
+                    $invoice->status = 'unpaid';
                     $invoice->save();
                 }
             });
             
-            // Add your cancellation policy logic here
-            $checkInDate = new \DateTime($booking->check_in_date);
-            $today = new \DateTime();
-            $daysUntilCheckIn = $today->diff($checkInDate)->days;
-            
-            // Example policy: allow cancellation with full refund at least 7 days before check-in
-            if ($daysUntilCheckIn >= 7) {
-                // Process refund logic here
-                
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Booking cancelled successfully with full refund'
-                ]);
-            } else {
-                // You might implement partial refund or no refund based on your policy
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Booking cancelled with partial or no refund as per cancellation policy'
-                ]);
-            }
+           
         }
         catch (\Exception $e) {
             \Log::error('Failed to cancel booking: ' . $e->getMessage());
