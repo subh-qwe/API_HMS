@@ -116,7 +116,7 @@ class AuthController extends Controller
      // This function handles user registration and send the verification email
     public function verifyOtp(Request $request){
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,email',
             'otp' => 'required|numeric'
         ]);
         

@@ -1,26 +1,38 @@
+# Use official PHP image with FPM
 FROM php:8.1-fpm
 
-# Install dependencies
-RUN apt-get update && apt-get install -y nginx
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libpq-dev
 
-# Copy application code
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
 WORKDIR /app
-COPY . .
 
-# Install Composer dependencies
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer install --optimize-autoloader --no-dev
+# Copy application files
+COPY . /app
 
-# Set permissions
+# Install PHP dependencies
+RUN composer install --ignore-platform-reqs --no-dev --optimize-autoloader
+
+# Set permissions for Lumen
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 RUN chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Copy Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Expose port (use PORT env variable for Railway)
+ENV PORT=8080
 
-# Expose port
-EXPOSE 3000
-
-# Start PHP-FPM and Nginx
-CMD php-fpm -D && nginx -g "daemon off;"
-
+# Start PHP built-in server for Lumen using PORT environment variable
+CMD php -S 0.0.0.0:${PORT} -t public

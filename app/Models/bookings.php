@@ -16,7 +16,6 @@ class bookings extends Model
         'check_in_date',
         'check_out_date',
         'guests_count',
-        
         'total_price',
         'status',
     ];
@@ -30,7 +29,7 @@ class bookings extends Model
     }
 
     public function reviews(){
-        return $this->hasMany(propertyReview::class, 'booking_id','id');
+        return $this->hasMany(PropertyReview::class, 'booking_id','id');
     }
 
 

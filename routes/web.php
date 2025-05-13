@@ -2,6 +2,7 @@
 
 /** @var \Laravel\Lumen\Routing\Router $router */
 
+use GuzzleHttp\Middleware;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\AuthController;
@@ -33,26 +34,43 @@ $router->get('/version', function () use ($router) {
 
 //USER MANAGEMENT 
 // 1 Create user or Signup 
+
  $router->post('website/user/signup', 'AuthController@signup');
  $router->post('website/user/verifyotp','AuthController@verifyOtp');
  $router->post('/website/user/login','AuthController@login');
+ 
 
 
- // use cases of protected routes
+
+
+// Property Management
+
+$router->group(['prefix'=> 'property'], function () use ($router){
+    $router->get('getproperties', 'PropertyController@listProperties');
+    $router->get('getpropertybyid/{id}', 'PropertyController@getPropertybyId');
+    $router->post('addnewproperty', 'PropertyController@store');
+    $router->post('updateproperty/{id}', 'PropertyController@updateProperty');
+    $router->post('deleteproperty/{id}', 'PropertyController@deleteProperty');
+});
+
+
+
+// 3 Property Booking Management
+$router->post('user/property/bookproperty', ['middleware' => 'auth', 'uses' => 'BookingController@bookProperty']);
+$router->post('user/property/cancelbooking', ['middleware' => 'auth', 'uses' => 'BookingController@cancelBooking']);
+
+
+
+// Property Review Management
+
+
+
+
+
+// ************************ Example Usage of protected routes *******************
  //$router->group(['middleware' => 'jwt.auth'], function () use ($router) {
     //         $router->post('logout', 'AuthController@logout');
     //         $router->post('refresh', 'AuthController@refresh');
     //         $router->get('me', 'AuthController@me');
     //         // Your other protected routes...
     //     });
-
-// Property Management
-
-$router->post('user/property/addnewproperty', 'PropertyController@store');
-$router->get('property/listproperties', 'PropertyController@listProperties');
-$router->get('property/listpropertyid/{id}', 'PropertyController@getPropertybyId');
-$router->post('property/updateproperty/{id}','PropertyController@updateProperty');
-
-// Property Review Management
-
-

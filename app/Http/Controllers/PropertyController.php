@@ -220,12 +220,25 @@ class PropertyController extends Controller
         }
     }
 
-    public function listProperties(){
+    public function listProperties()
+    {
+        try
+        {
         $properties = Properties::with('images', 'amenities')->get();
         return response()->json([
             'message' => 'Properties retrieved successfully',
             'data' => $properties
         ], 200);
+        }
+        catch(\Exception $e){
+            \Log::error('Failed to retrieve properties: ' . $e->getMessage());
+
+            return response()->json([
+                'message'=> 'Failed to retrieve Properties',
+                'error' => $e->getMessage()
+            ], 500);
+
+        }
     }
 
     public function getPropertybyId($id){
@@ -244,6 +257,18 @@ class PropertyController extends Controller
                 'data' => $property
             ], 200);
         
+        $property = Properties::with('images', 'amenities')->find($id);
+
+        if(!$property){
+            return response()->json([
+                'message' => 'Property not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Property retrieved successfully',
+            'data' => $property->load('images', 'amenities')
+        ], 200);
     }
 
     public function updateProperty(Request $request, $id)
@@ -385,4 +410,51 @@ class PropertyController extends Controller
 
        
     }
+
+    
+    public function deleteProperty($id)
+    {
+        
+        try{
+            $property = Properties::with('images', 'amenities')->find($id);
+
+            if(!$property)
+            {
+                return response()->json([
+                'message' => 'Property not found',
+                ], 404);
+            }
+
+            // Delete related images from Cloudinary
+            foreach ($property->images as $image) {
+                // Delete the image from Cloudinary using its public_id
+                $this->cloudinaryService->deleteFile($image->public_id);
+            }
+
+            //Delete image records from the database
+            $property->images()->delete();
+
+            //Delete property id and all related records of the property_amenity 
+            $property->delete();
+
+        return response()->json([
+            'message' => 'Property deleted successfully',
+        ], 200);
+
+
+        }
+        catch(\Exception $e){
+            \Log::error('Property deletion failed: ' . $e->getMessage(), ['exception' => $e]);
+
+            return response()->json([
+                'message' => 'Failed to delete property',
+                'error' => 'Database error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+        
+      
+
+
+
