@@ -58,12 +58,6 @@ $app->singleton(
 );
 
 
-$app->singleton(
-    Illuminate\Contracts\Console\Kernel::class,
-    App\Console\Kernel::class
-);
-
-
 /*
 |--------------------------------------------------------------------------
 | Register Config Files
@@ -145,7 +139,6 @@ class_alias(\Barryvdh\DomPDF\Facade\Pdf::class, 'PDF');
 // Make sure storage directory is accessible
 $app->useStoragePath(env('STORAGE_PATH', base_path() . '/storage'));
 
-// $app->register(\Illuminate\Mail\MailServiceProvider::class);
 
 // Configure mail settings
 $app->configure('services');

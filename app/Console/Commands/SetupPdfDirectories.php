@@ -39,7 +39,7 @@ class SetupPdfDirectories extends Command
     public function handle()
     {
         $directories = [
-            storage_path('app/invoices'),
+            storage_path('app/public'),
             storage_path('fonts'),
             resource_path('views/emails'),
             base_path('config'),
@@ -65,7 +65,7 @@ class SetupPdfDirectories extends Command
         // Reminder about permissions
         $this->info('');
         $this->info('Reminder: Make sure your web server has write permissions to these directories:');
-        $this->info('- storage/app/invoices');
+        $this->info('- storage/app/public');
         $this->info('- storage/fonts');
         $this->info('- bootstrap/cache');
         $this->info('');

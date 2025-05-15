@@ -62,6 +62,7 @@ $router->post('user/property/cancelbooking', ['middleware' => 'auth', 'uses' => 
 
 
 // Property Review Management
+$router->post('user/property/reviewproperty', ['middleware' => 'auth', 'uses' => 'ReviewController@reviewProperty']);
 
 
 

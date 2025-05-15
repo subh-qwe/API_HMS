@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\bookings;
-use App\Models\invoice;
+use App\Models\Invoice;
 use App\Models\Properties;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BookingInvoiceMail;
@@ -104,7 +104,7 @@ class BookingController extends Controller
                 $invoice_number = 'INV' . date('Y') . '-' . $booking->id;
                 $base_price = $days * $property->price_per_night;
                 
-                invoice::create([
+                Invoice::create([
                     'booking_id' => $booking->id,
                     'invoice_number' => $invoice_number,
                     'subtotal' => $base_price,
@@ -231,15 +231,23 @@ class BookingController extends Controller
                 $booking->status = 'cancelled';
                 $booking->save();
                 
-                // Update related invoice status
+                //Update property availability
+                $property = $booking->property;
+                $property->status = 'available';
+                $property->save();
+
+
+                // Delete Invoice if exists
                 $invoice = invoice::where('booking_id', $booking->id)->first();
                 if ($invoice) {
-                    $invoice->status = 'unpaid';
-                    $invoice->save();
+                    $invoice->delete();
                 }
             });
             
-           
+           return response()->json([
+               'status' => 'success',
+               'message' => 'Booking cancelled successfully'
+           ]);
         }
         catch (\Exception $e) {
             \Log::error('Failed to cancel booking: ' . $e->getMessage());
