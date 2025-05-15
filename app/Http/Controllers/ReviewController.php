@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\PropertyReview;
 use App\Models\bookings;
 use App\Models\Properties;
+use App\Models\PropertyRating;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -29,13 +30,22 @@ class ReviewController extends Controller
             'comment' => 'required|string',
         ]);
 
+        if ($validatedData->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validatedData->errors()
+            ], 422);
+        }
+
+        $validated = $validatedData->validated();
+        
         $user = Auth::user();
 
-         
         // Verify booking belongs to the authenticated user
-        $booking = bookings::where('id', $validatedData['booking_id'])
+        $booking = bookings::where('id', $validated['booking_id'])
             ->where('guest_id', $user->id)
             ->first();
+
 
         if (!$booking) {
             return response()->json([
@@ -52,18 +62,16 @@ class ReviewController extends Controller
             ], 400);
         }
 
-        // Check if the booking is completed before allowing review
-        $currentDate = Carbon::now();
-
-        //lt method is to check the date is less than the checkout date
-        if ($currentDate->lt($booking->check_out_date)) {
+        // Check if the booking status is completed before allowing review
+        if ($booking->status != 'completed') {
             return response()->json([
                 'success' => false,
-                'message' => 'You can only review a property after your stay is complete.'
+                'message' => 'You can only review once the booking is completed and confirmed.'
             ], 400);
         }
+        
 
-         // Check if user has already reviewed this booking.
+         // Checking if user has already reviewed this booking.
         $existingReview = PropertyReview::where('booking_id', $validated['booking_id'])
             ->where('guest_id', $user->id)
             ->first();
@@ -75,17 +83,42 @@ class ReviewController extends Controller
             ], 400);
         }
 
-        // Create the review
-        $review = PropertyReview::create([
-            'property_id' => $validatedData['property_id'],
-            'booking_id' => $validatedData['booking_id'],
-            'user_id' => $user->id,
-            'rating' => $validatedData['rating'],
-            'comment' => $validatedData['comment'],
-       
+        
+        DB::beginTransaction();
+        
+        try {
+            // Create new review
+            $review = new PropertyReview();
+            $review->booking_id = $validated['booking_id'];
+            $review->property_id = $validated['property_id'];
+            $review->guest_id = $user->id;
+            $review->rating = $validated['rating'];
+            $review->comment = $validated['comment'];
+            $review->save();
 
-        ]);
+            // Update property rating
+            $this->updatePropertyRating($validated['property_id']);
+            
+            // Commit transaction
+            DB::commit();
 
+            return response()->json([
+                'success' => true,
+                'message' => 'Review submitted successfully.',
+                'review' => $review
+            ], 201);
+            
+        } 
+        catch (\Exception $e) {
+            // Rollback transaction on error
+            DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to submit review. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
 
     }
 
@@ -98,15 +131,35 @@ class ReviewController extends Controller
     private function updatePropertyRating($propertyId)
     {
         // Calculate new average rating
-        $avgRating = PropertyReview::where('property_id', $propertyId)->avg('rating');
-        
-        // Update property's rating if you have rating field in properties table
-        $property = Properties::find($propertyId);
-        if ($property) {
-            // Assuming you have an average_rating column in the properties table
-            // If not, you may need to adjust this part
-            $property->average_rating = round($avgRating, 1);
-            $property->save();
-        }
+        $avgRating = PropertyReview::where('property_id', $propertyId)->avg('rating') ?: 0;
+        $reviewCount = PropertyReview::where('property_id', $propertyId)->count();
+
+        // Round average rating to 2 decimal places
+        $avgRating = round($avgRating, 2);
+
+         
+        //update the property rating if not then create
+         DB::transaction(function() use ($propertyId, $avgRating, $reviewCount) {
+            //check if the property rating exists
+            $rating = PropertyRating::where('property_id', $propertyId)->first();
+            
+            if ($rating) {
+                $rating->update([
+                    'average_rating' => $avgRating,
+                    'review_count' => $reviewCount,
+                    'updated_at' => Carbon::now()
+                ]);
+            } 
+            //create the property rating if not exists
+            else {
+                PropertyRating::create([
+                    'property_id' => $propertyId,
+                    'average_rating' => $avgRating,
+                    'review_count' => $reviewCount,
+                    'updated_at' => Carbon::now()
+                ]);
+            }
+        });
+    
     }
 }
