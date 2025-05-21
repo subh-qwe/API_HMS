@@ -59,5 +59,14 @@ class UserRegistration extends Model implements AuthenticatableContract, Authori
     public function reviews(){
         return $this->hasMany(PropertyReview::class,'guest_id','id');
     }
+
+    public function getHostbyid($id)
+    {
+        return self::where('id', $id)->first();
+    }
     
+    public function getEmailbyid($id)
+    {
+     return self::where('id', $id)->select('email')->first();
+    }
 }
