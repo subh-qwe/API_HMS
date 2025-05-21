@@ -27,7 +27,9 @@ class UserRegistration extends Model implements AuthenticatableContract, Authori
      */
     public function getJWTCustomClaims()
     {
-        return [];
+        return [
+            'role' => $this->role,
+        ];
     }
 
    protected $table = 'users';

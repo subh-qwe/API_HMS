@@ -215,6 +215,17 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // First, check if user exists with the provided email
+        $user = UserRegistration::where('email', $request->email)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid Credentials'
+            ], 401);
+        }
+
+
         // Get credentials for attempt
         $credentials = $request->only(['email', 'password']);
 
@@ -237,7 +248,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'status' => 'success',
-            'message' => 'User Login Successfully!',
+            'message' => 'Login Successfully!',
             'token' => $token,
             'token_type' => 'bearer',
             'expires_in' => Auth::factory()->getTTL() * 60 // in seconds
