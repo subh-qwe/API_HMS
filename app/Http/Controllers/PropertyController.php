@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\Properties;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PropertyCreatedMail;
+use App\Models\UserRegistration;
 use App\Services\CloudinaryService;
 use App\Models\PropertyImages;
 
@@ -42,7 +45,6 @@ class PropertyController extends Controller
             'price_per_night' => 'required|numeric|min:0',
             'cleaning_fee' => 'nullable|numeric|min:0',
             'service_fee' => 'nullable|numeric|min:0',
-            'status' => 'required|in:available,unavailable,maintenance',
 
             //Validation for images
             //required_with:images: Ensures an image is provided if the images array exists.
@@ -104,8 +106,6 @@ class PropertyController extends Controller
             'cleaning_fee.min' => 'The cleaning fee cannot be negative.',
             'service_fee.numeric' => 'The service fee must be a valid number.',
             'service_fee.min' => 'The service fee cannot be negative.',
-            'status.required' => 'Please specify the property status.',
-            'status.in' => 'The status must be one of: available, unavailable, or maintenance.',
 
             // * in 'images.*.image' is a wildcard that applies the validation rules to the image field of every element in the images
             'images.*.image.required' => 'An image file is required when providing images.',
@@ -155,7 +155,7 @@ class PropertyController extends Controller
                     'price_per_night' => $validated['price_per_night'],
                     'cleaning_fee' => $validated['cleaning_fee'] ?? null,
                     'service_fee' => $validated['service_fee'] ?? null,
-                    'status' => $validated['status'],
+                    'status' => 'unavailable',
                 ]);
 
                  // Handle amenities
@@ -194,6 +194,22 @@ class PropertyController extends Controller
                         }
                     }
 
+                // $oldPropertyData = $property->toArray();
+
+             // Get host email and send update notification
+            
+            $host = new UserRegistration();
+            $hostid = $host->getHostbyid($validated['host_id']);
+            $hostEmail = $host->getEmailbyid($validated['host_id']);
+
+            if ($hostid && $hostEmail) {
+                try {
+                    Mail::to($hostEmail)->send(new PropertyCreatedMail($property, $hostid));
+                } catch (\Exception $emailException) {
+                    \Log::warning('Failed to send property update email: ' . $emailException->getMessage());
+                }
+            }
+
                 // Commit the transaction
                 DB::commit();
 
@@ -220,10 +236,14 @@ class PropertyController extends Controller
     }
 
     public function listProperties()
-    {
+    {       
         try
         {
-        $properties = Properties::with('images', 'amenities')->get();
+        $properties = Properties::with('images', 'amenities')
+                         ->where('status', 'available')
+                        ->get();
+        
+                        
         return response()->json([
             'message' => 'Properties retrieved successfully',
             'data' => $properties
@@ -242,11 +262,12 @@ class PropertyController extends Controller
 
     public function getPropertybyId($id){
        
-        $property = Properties::with('images', 'amenities')->find($id);
+        $property = Properties::with('images', 'amenities')
+                    ->where('status', 'available')->find($id);
 
         if(!$property){
             return response()->json([
-                'message' => 'Property not found',
+                'message' => 'Property not Available',
             ], 404);
         }
 
