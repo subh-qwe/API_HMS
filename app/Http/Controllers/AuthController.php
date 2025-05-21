@@ -125,12 +125,13 @@ class AuthController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+         $user = User::where('email', $request->user_id)->first();
         
-        $user = User::find($request->user_id);
-        
+        // Check if user exists
         if ($user->otp != $request->otp) {
             return response()->json(['error' => 'Invalid OTP'], 400);
         }
+        
         // here i am using the comment 
         $user->otp = null; 
         $user->email_verified_at = \Carbon\Carbon::now(); 
