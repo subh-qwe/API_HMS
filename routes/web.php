@@ -6,6 +6,10 @@ use GuzzleHttp\Middleware;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ReviewController;
+
 
 
 
@@ -32,6 +36,12 @@ $router->get('/version', function () use ($router) {
     return $router->app->version();
 });
 
+//ADMIN MANAGEMENT
+$router->group(['middleware' => 'jwt.auth'], function () use ($router) {
+    $router->post('/admin/dashboard', 'AdminController@adminActions');
+});
+
+
 //USER MANAGEMENT 
 // 1 Create user or Signup 
 
@@ -39,9 +49,6 @@ $router->get('/version', function () use ($router) {
  $router->post('website/user/verifyotp','AuthController@verifyOtp');
  $router->post('/website/user/login','AuthController@login');
  
-
-
-
 
 // Property Management
 

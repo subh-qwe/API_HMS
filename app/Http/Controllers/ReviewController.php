@@ -105,7 +105,7 @@ class ReviewController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Review submitted successfully.',
-                'review' => $review
+                
             ], 201);
             
         } 
@@ -134,7 +134,7 @@ class ReviewController extends Controller
         $avgRating = PropertyReview::where('property_id', $propertyId)->avg('rating') ?: 0;
         $reviewCount = PropertyReview::where('property_id', $propertyId)->count();
 
-        // Round average rating to 2 decimal places
+        
         $avgRating = round($avgRating, 2);
 
          
