@@ -37,8 +37,17 @@ $router->get('/version', function () use ($router) {
 });
 
 //ADMIN MANAGEMENT
-$router->group(['middleware' => 'jwt.auth'], function () use ($router) {
-    $router->post('/admin/dashboard', 'AdminController@adminActions');
+
+//In the middleware, we check if the user is authenticated and if the user has the admin role
+$router->group(['middleware' => ['auth', 'admin.role']], function () use ($router) {
+    $router->get('/admin/dashboard', 'AdminController@adminActions');
+    $router->get('/admin/unavailableproperties','AdminController@getUnavailableProperties');
+    $router->get('/admin/getallstats','AdminController@getAllStats');
+    $router->get('admin/getbookings','AdminController@getBookings');
+    $router->get('admin/getusers','AdminController@getAllUsers');
+    $router->post('admin/updatestatus','AdminController@UpdatePropertyStatus');
+    $router->post('admin/rejectproperty','AdminController@rejectProperties');
+
 });
 
 

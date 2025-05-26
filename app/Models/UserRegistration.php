@@ -69,4 +69,9 @@ class UserRegistration extends Model implements AuthenticatableContract, Authori
     {
      return self::where('id', $id)->select('email')->first();
     }
+
+     public function properties()
+    {
+        return $this->hasMany(Properties::class, 'host_id', 'id');
+    }
 }
