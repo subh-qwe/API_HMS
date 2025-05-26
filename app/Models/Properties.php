@@ -47,4 +47,14 @@ class Properties extends Model
     {
         return $this->hasMany(PropertyReview::class, 'property_id', 'id');
     }
+
+     public function host()
+    {
+        return $this->belongsTo(UserRegistration::class, 'host_id', 'id');
+    }
+
+    public static function UpdatePropertyStatus($status , $id)
+    { 
+        return self::where('id', $id)->update(['status' => $status]);
+    }
 }
