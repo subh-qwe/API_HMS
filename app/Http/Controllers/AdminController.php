@@ -13,11 +13,6 @@ use App\Models\UserRegistration;
 use App\Models\Properties;
 use App\Models\bookings;
 
-    // 1 - get all unavilable prpos 
-    // 2 - verify property 
-    // 3 - reject property
-    // 4 - get all bookings
-    // 5 - get all users
 
 class AdminController extends Controller
 {
