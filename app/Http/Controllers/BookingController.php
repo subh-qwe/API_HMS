@@ -101,7 +101,7 @@ class BookingController extends Controller
                 $booking->load('property', 'guest');
                 
                 // Create invoice record in the database
-                $invoice_number = 'INV' . date('Y') . '-' . $booking->id;
+                $invoice_number = 'INV' . date('Y') . '-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
                 $base_price = $days * $property->price_per_night;
                 
                 Invoice::create([
@@ -173,7 +173,7 @@ class BookingController extends Controller
         }
         
         // Get the invoice from database
-        $invoice = invoice::where('booking_id', $booking->id)->first();
+        $invoice = Invoice::where('booking_id', $booking->id)->first();
         
         if (!$invoice) {
             throw new \Exception('Invoice not found for booking #' . $booking->id);
@@ -237,8 +237,7 @@ class BookingController extends Controller
                 $property->save();
 
 
-                // Delete Invoice if exists
-                $invoice = invoice::where('booking_id', $booking->id)->first();
+                $invoice = Invoice::where('booking_id', $booking->id)->first();
                 if ($invoice) {
                     $invoice->delete();
                 }
